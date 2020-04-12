@@ -26,10 +26,11 @@ import com.wallet.wallet.services.UserService;
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 public class UserControllerTest {
-
+	
+	private static final Long ID = 1L;
 	private static final String EMAIL = "email@teste.com";
 	private static final String NAME = "User_tes";
-	private static final String PASSWORD = "12345";
+	private static final String PASSWORD = "1234567";
 	private static final String URL = "/user";
 	
 	@MockBean
@@ -43,15 +44,29 @@ public class UserControllerTest {
 		
 		BDDMockito.given(service.save(Mockito.any(User.class))).willReturn(getMockUser());
 		
-		mvc.perform(MockMvcRequestBuilders.post(URL).content(getJsonPayload())
+		mvc.perform(MockMvcRequestBuilders.post(URL).content(getJsonPayload(ID, EMAIL, NAME, PASSWORD))
 				.contentType(MediaType.APPLICATION_JSON)
 				.accept(MediaType.APPLICATION_JSON))
-		.andExpect(MockMvcResultMatchers.status().isCreated());
+		.andExpect(MockMvcResultMatchers.status().isCreated())
+		.andExpect(MockMvcResultMatchers.jsonPath("$.data.id").value(ID))
+		.andExpect(MockMvcResultMatchers.jsonPath("$.data.email").value(EMAIL))
+		.andExpect(MockMvcResultMatchers.jsonPath("$.data.name").value(NAME))
+		.andExpect(MockMvcResultMatchers.jsonPath("$.data.password").value(PASSWORD));
 	}
 
+	@Test
+	public void testSaveInvalidUser() throws JsonProcessingException, Exception {
+		mvc.perform(MockMvcRequestBuilders.post(URL).content(getJsonPayload(ID, "email", NAME, PASSWORD))
+				.contentType(MediaType.APPLICATION_JSON)
+				.accept(MediaType.APPLICATION_JSON))
+		.andExpect(MockMvcResultMatchers.status().isBadRequest())
+		.andExpect(MockMvcResultMatchers.jsonPath("$.erros[0]").value("Email invalido"));
+	}
+	
 	
 	public User getMockUser() {
 		User u = new User();
+		u.setId(ID);
 		u.setName(NAME);
 		u.setEmail(EMAIL);
 		u.setPassword(PASSWORD);
@@ -59,15 +74,15 @@ public class UserControllerTest {
 		return u;
 	}
 	
-	public String getJsonPayload() throws JsonProcessingException {
+	public String getJsonPayload(Long id, String email, String nome, String password) throws JsonProcessingException {
+		
 		UserDTO dto = new UserDTO();
-		dto.setName(NAME);
-		dto.setEmail(EMAIL);
-		dto.setPassword(PASSWORD);
+		dto.setId(id);
+		dto.setName(nome);
+		dto.setEmail(email);
+		dto.setPassword(password);
 		
 		ObjectMapper mapper = new ObjectMapper();
 		return mapper.writeValueAsString(dto);
 	}
-	
-	
 }

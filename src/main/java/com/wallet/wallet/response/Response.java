@@ -1,5 +1,6 @@
 package com.wallet.wallet.response;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Response<T> {
@@ -16,6 +17,9 @@ public class Response<T> {
 		this.data = data;
 	}
 	public List<String> getErros() {
+		if(this.erros == null) {
+			this.erros = new ArrayList<String>();
+		}
 		return erros;
 	}
 	public void setErros(List<String> erros) {
